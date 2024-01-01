@@ -1,0 +1,46 @@
+blueprint:
+  name: Limit device time
+  description: Turns a device off after some time elapsed
+  author: Dany Khalife
+  domain: automation
+  input:
+    device:
+      description: The device to monitor when turned on, and turn off later.
+      selector:
+        entity:
+          domain: switch
+    time:
+      description: The duration to wait for before turning the device off.
+      selector:
+        duration:
+      default: 
+        hours: 1
+        minutes: 0
+        seconds: 0
+    notify:
+      description: The notification service to use for notifications.
+      selector:
+        device:
+          integration: mobile_app
+    message:
+      description: The message to include in the notification
+      selector:
+        text:
+      default: Device has been turned off
+
+mode: restart
+trigger:
+  - platform: state
+    from: "off"
+    to: "on"
+    entity_id: !input device
+    for: !input time
+condition: []
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: !input device
+  - device_id: !input notify
+    domain: mobile_app
+    type: notify
+    message: !input message
