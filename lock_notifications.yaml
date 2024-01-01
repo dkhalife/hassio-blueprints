@@ -1,0 +1,55 @@
+blueprint:
+  name: Lock notifications
+  description: Sends a notification whenever a lock is unlocked and when it remains unlocked for a given duration.
+  author: Dany Khalife
+  domain: automation
+  input:
+    lock:
+      description: The lock to monitor.
+      selector:
+        entity:
+          domain: lock
+    notify:
+      description: The notification service to use for notifications.
+      selector:
+        device:
+          integration: mobile_app
+    message_just_unlocked:
+      description: The message to include in the notification when the lock just got unlocked.
+      selector:
+        text:
+      default: Unlocked
+    time:
+      description: The duration to wait before assuming the lock was left unlocked.
+      selector:
+        duration:
+      default: 
+        hours: 0
+        minutes: 5
+        seconds: 0
+    message_left_unlocked:
+      description: The message to include in the notification when the lock remains unlocked for a certain duration.
+      selector:
+        text:
+      default: Left unlocked
+
+mode: parallel
+variables:
+  message_just_unlocked: !input message_just_unlocked
+  message_left_unlocked: !input message_left_unlocked
+trigger:
+  - id: just_unlocked
+    platform: state
+    to: unlocked
+    entity_id: !input lock
+  - id: left_unlocked
+    platform: state
+    to: unlocked
+    entity_id: !input lock
+    for: !input time
+condition: []
+action:
+  - device_id: !input notify
+    domain: mobile_app
+    type: notify
+    message: "{% if trigger.id == 'just_unlocked' %}{{message_just_unlocked}}{% else %}{{message_left_unlocked}}{% endif %}"
