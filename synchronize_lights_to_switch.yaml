@@ -1,0 +1,41 @@
+blueprint:
+  name: Light switch synchronization
+  description: Connects a switchs to lights
+  author: Dany Khalife
+  domain: automation
+  input:
+    switch:
+      description: The switch that will control the lights
+      selector:
+        entity:
+          domain: switch
+    lights:
+      description: The set of lights that the switch will control
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: light
+
+mode: restart
+trigger:
+  - id: "on"
+    platform: state
+    entity_id: !input switch
+    from: "off"
+    to: "on"
+  - id: "off"
+    platform: state
+    entity_id: !input switch
+    from: "on"
+    to: "off"
+condition: []
+action:
+  - service: >-
+      {% if trigger.id == 'on' %}
+        light.turn_on
+      {% else %}
+        light.turn_off
+      {% endif %}
+    target:
+      entity_id: !input lights
