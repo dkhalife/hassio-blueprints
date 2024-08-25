@@ -1,0 +1,70 @@
+blueprint:
+  name: Timed lights
+  description: Turns lights on at a given time and then off at another
+  author: Dany Khalife
+  domain: automation
+  input:
+    lights:
+      description: The set of lights that the switch will control
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: light
+    start_time:
+      description: The time at which the lights should turn on.
+      selector:
+        time:
+      default: 
+        hours: 17
+        minutes: 10
+        seconds: 0
+    end_time:
+      description: The time at which the lights should turn off.
+      selector:
+        time:
+      default: 
+        hours: 18
+        minutes: 0
+        seconds: 0
+    notify:
+      description: The notification service to use for notifications.
+      selector:
+        device:
+          integration: mobile_app
+    message_on:
+      description: Notification message whenever the automation turns the lights on.
+      selector:
+        text:
+      default: Lights turned on automatically
+    message_off:
+      description: Notification message whenever the automation turns the lights off.
+      selector:
+        text:
+      default: Lights turned off automatically
+
+mode: single
+variables:
+  message_on: !input message_on
+  message_off: !input message_off
+trigger:
+  - id: "on"
+    platform: time
+    at: !input start_time
+  - id: "off"
+    platform: time
+    at: !input end_time
+condition: []
+action:
+- service: >-
+    {% if trigger.id == 'on' %}
+      light.turn_on
+    {% else %}
+      light.turn_off
+    {% endif %}
+  target:
+    entity_id: !input lights
+- device_id: !input notify
+  domain: mobile_app
+  type: notify
+  message: "{% if trigger.id == 'on' %}{{message_on}}{% else %}{{message_off}}{% endif %}"
