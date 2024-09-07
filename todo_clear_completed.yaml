@@ -1,0 +1,30 @@
+blueprint:
+  name: ToDo clear completed
+  description: Deletes completed items from the specified lists at the given time
+  author: Dany Khalife
+  domain: automation
+  input:
+    lists:
+      description: The ToDo lists to clean up
+      selector:
+        entity:
+          domain: todo
+          multiple: true
+    notification_time:
+      description: The time at which to perform the cleanup
+      selector:
+        time:
+      default: 
+        hours: 8
+        minutes: 0
+        seconds: 0
+
+mode: single
+trigger:
+  - platform: time
+    at: !input notification_time
+condition: []
+action:
+  - action: todo.remove_completed_items
+    target:
+      entity_id: !input lists
