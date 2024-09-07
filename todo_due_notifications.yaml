@@ -1,0 +1,70 @@
+blueprint:
+  name: ToDo due reminders
+  description: Sends notifications with items that are due
+  author: Dany Khalife
+  domain: automation
+  input:
+    lists:
+      description: The ToDo lists to scan
+      selector:
+        entity:
+          domain: todo
+          multiple: true
+    notification_time:
+      description: The time at which the notification is sent
+      selector:
+        time:
+      default: 
+        hours: 8
+        minutes: 0
+        seconds: 0
+    notify:
+      description: The notification service to use for notifications.
+      selector:
+        device:
+          integration: mobile_app
+
+mode: single
+trigger:
+  - platform: time
+    at: !input notification_time
+condition: []
+action:
+  - metadata: {}
+    data:
+      status: needs_action
+    target:
+      entity_id: !input lists
+    response_variable: tasks
+    action: todo.get_items
+  - variables:
+      tasks_for_today: >
+        {%- set today = now().strftime('%Y-%m-%d')-%}
+        {%- set ns = namespace(result = []) -%}
+
+        {%- for listName in tasks -%}
+          {% set tasks_list = tasks[listName]['items'] %}
+
+          {%- if tasks_list is iterable -%}
+            {%- for task in tasks_list -%}
+              {%- if 'due' in task -%}
+                {%- if task['due'].split('T')[0] == today -%}
+                  {%- set ns.result = ns.result + [task['summary']] -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if ns.result is iterable -%}
+          {%- for item in ns.result %}  
+        - {{ item }}
+          {%- endfor -%}
+        {%- endif -%}
+  - condition: template
+    value_template: "{{ tasks_for_today != '' }}"
+  - device_id: !input notify
+    domain: mobile_app
+    type: notify
+    title: Tasks due today
+    message: "{{ tasks_for_today }}"
