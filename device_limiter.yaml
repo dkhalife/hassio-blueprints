@@ -8,9 +8,7 @@ blueprint:
       description: The device to monitor when turned on, and turn off later.
       selector:
         entity:
-          filter:
-          - domain: light
-          - domain: switch
+          domain: switch
     time:
       description: The duration to wait for before turning the device off.
       selector:

@@ -11,7 +11,6 @@ blueprint:
           multiple: true
           filter:
             - domain: light
-            - domain: switch
     start_time:
       description: The time at which the lights should turn on.
       selector:
